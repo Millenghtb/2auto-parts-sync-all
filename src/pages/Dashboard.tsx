@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { User, Session } from "@supabase/supabase-js";
-import { Settings, Store, ShoppingCart, Database, Users, Shield } from "lucide-react";
+import { Settings, Store, ShoppingCart, Database, Users, Shield, Plus } from "lucide-react";
 import { useUserRoles } from "@/hooks/useUserRoles";
-import UserManagement from "@/components/UserManagement";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import AppSidebar from "@/components/AppSidebar";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -73,159 +73,192 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Панель управления</h1>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              {isAdmin && (
-                <div className="flex items-center gap-1 text-sm bg-primary/10 text-primary px-2 py-1 rounded">
-                  <Shield className="h-3 w-3" />
-                  Администратор
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar user={user} />
+        
+        <div className="flex-1 flex flex-col">
+          <header className="border-b bg-background">
+            <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <SidebarTrigger />
+                <h1 className="text-2xl font-bold">Панель управления</h1>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  {isAdmin && (
+                    <div className="flex items-center gap-1 text-sm bg-primary/10 text-primary px-2 py-1 rounded">
+                      <Shield className="h-3 w-3" />
+                      Администратор
+                    </div>
+                  )}
+                  <span className="text-sm text-muted-foreground">
+                    {user.email}
+                  </span>
                 </div>
-              )}
-              <span className="text-sm text-muted-foreground">
-                {user.email}
-              </span>
+                <Button variant="outline" onClick={handleSignOut}>
+                  Выйти
+                </Button>
+              </div>
             </div>
-            <Button variant="outline" onClick={handleSignOut}>
-              Выйти
-            </Button>
-          </div>
+          </header>
+
+          <main className="flex-1 p-6">
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-3xl font-bold">Добро пожаловать!</h2>
+                <p className="text-muted-foreground">
+                  Система управления поставщиками и маркетплейсами
+                </p>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Поставщики
+                    </CardTitle>
+                    <Store className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">0</div>
+                    <p className="text-xs text-muted-foreground">
+                      Настроенных поставщиков
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-2"
+                      onClick={() => navigate('/suppliers')}
+                    >
+                      Управление
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Маркетплейсы
+                    </CardTitle>
+                    <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">0</div>
+                    <p className="text-xs text-muted-foreground">
+                      Активных маркетплейсов
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-2"
+                      onClick={() => navigate('/marketplaces')}
+                    >
+                      Управление
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Подключения
+                    </CardTitle>
+                    <Database className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">0</div>
+                    <p className="text-xs text-muted-foreground">
+                      Активных подключений
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-2"
+                      onClick={() => navigate('/system-settings')}
+                    >
+                      Настройки
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Быстрые действия
+                    </CardTitle>
+                    <Plus className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => navigate('/suppliers/new')}
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Поставщик
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => navigate('/marketplaces/new')}
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Маркетплейс
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Последние действия</CardTitle>
+                    <CardDescription>
+                      Недавние изменения в системе
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-center py-4">
+                      Пока нет активности
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Системная информация</CardTitle>
+                    <CardDescription>
+                      Состояние системы
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Статус:</span>
+                        <span className="text-green-600">Работает</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Версия:</span>
+                        <span>1.0.0</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Ваша роль:</span>
+                        <span>{isAdmin ? 'Администратор' : 'Пользователь'}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </main>
         </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Поставщики
-              </CardTitle>
-              <Store className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground">
-                Настроенных поставщиков
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Маркетплейсы
-              </CardTitle>
-              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground">
-                Активных маркетплейсов
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Подключения
-              </CardTitle>
-              <Database className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground">
-                Активных подключений
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Настройки
-              </CardTitle>
-              <Settings className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">3</div>
-              <p className="text-xs text-muted-foreground">
-                Доступных модулей
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Tabs defaultValue="suppliers" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="suppliers">Настройки поставщиков</TabsTrigger>
-            <TabsTrigger value="marketplaces">Настройки маркетплейсов</TabsTrigger>
-            <TabsTrigger value="system">Системные параметры</TabsTrigger>
-            {isAdmin && <TabsTrigger value="users">Пользователи</TabsTrigger>}
-          </TabsList>
-
-          <TabsContent value="suppliers" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Настройки поставщиков</CardTitle>
-                <CardDescription>
-                  Управление поставщиками и их параметрами
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Здесь будут настройки для управления поставщиками, их контактной информацией,
-                  условиями поставок и интеграцией с их системами.
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="marketplaces" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Настройки маркетплейсов</CardTitle>
-                <CardDescription>
-                  Конфигурация подключений к маркетплейсам
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Здесь будут настройки для подключения к различным маркетплейсам,
-                  настройка API ключей, правил синхронизации и кастомизации для каждого поставщика.
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="system" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Системные параметры</CardTitle>
-                <CardDescription>
-                  Глобальные настройки системы
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Здесь будут системные настройки: интервалы синхронизации,
-                  настройки уведомлений, резервного копирования и мониторинга.
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {isAdmin && (
-            <TabsContent value="users" className="space-y-4">
-              <UserManagement currentUser={user} isAdmin={isAdmin} />
-            </TabsContent>
-          )}
-        </Tabs>
-      </main>
-    </div>
+      </div>
+    </SidebarProvider>
   );
 };
 
