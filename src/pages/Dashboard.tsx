@@ -6,7 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { User, Session } from "@supabase/supabase-js";
-import { Settings, Store, ShoppingCart, Database } from "lucide-react";
+import { Settings, Store, ShoppingCart, Database, Users, Shield } from "lucide-react";
+import { useUserRoles } from "@/hooks/useUserRoles";
+import UserManagement from "@/components/UserManagement";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -14,6 +16,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAdmin, loading: rolesLoading } = useUserRoles(user);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -54,7 +57,7 @@ const Dashboard = () => {
     }
   };
 
-  if (loading) {
+  if (loading || rolesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -75,9 +78,17 @@ const Dashboard = () => {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Панель управления</h1>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              {user.email}
-            </span>
+            <div className="flex items-center gap-2">
+              {isAdmin && (
+                <div className="flex items-center gap-1 text-sm bg-primary/10 text-primary px-2 py-1 rounded">
+                  <Shield className="h-3 w-3" />
+                  Администратор
+                </div>
+              )}
+              <span className="text-sm text-muted-foreground">
+                {user.email}
+              </span>
+            </div>
             <Button variant="outline" onClick={handleSignOut}>
               Выйти
             </Button>
@@ -153,6 +164,7 @@ const Dashboard = () => {
             <TabsTrigger value="suppliers">Настройки поставщиков</TabsTrigger>
             <TabsTrigger value="marketplaces">Настройки маркетплейсов</TabsTrigger>
             <TabsTrigger value="system">Системные параметры</TabsTrigger>
+            {isAdmin && <TabsTrigger value="users">Пользователи</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="suppliers" className="space-y-4">
@@ -205,6 +217,12 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {isAdmin && (
+            <TabsContent value="users" className="space-y-4">
+              <UserManagement currentUser={user} isAdmin={isAdmin} />
+            </TabsContent>
+          )}
         </Tabs>
       </main>
     </div>
