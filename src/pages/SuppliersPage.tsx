@@ -34,7 +34,7 @@ const SuppliersPage = () => {
   const fetchSuppliers = async () => {
     try {
       const { data, error } = await supabase
-        .from('suppliers' as any)
+        .from('suppliers')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -58,7 +58,7 @@ const SuppliersPage = () => {
   const toggleSupplierStatus = async (supplierId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from('suppliers' as any)
+        .from('suppliers')
         .update({ is_active: !currentStatus })
         .eq('id', supplierId);
 
@@ -89,7 +89,7 @@ const SuppliersPage = () => {
 
     try {
       const { error } = await supabase
-        .from('suppliers' as any)
+        .from('suppliers')
         .delete()
         .eq('id', supplierId);
 

@@ -51,7 +51,7 @@ const SupplierFormPage = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('suppliers' as any)
+        .from('suppliers')
         .select('*')
         .eq('id', id)
         .single();
@@ -89,7 +89,7 @@ const SupplierFormPage = () => {
     try {
       if (isEditing) {
         const { error } = await supabase
-          .from('suppliers' as any)
+          .from('suppliers')
           .update(form)
           .eq('id', id);
 
@@ -101,7 +101,7 @@ const SupplierFormPage = () => {
         });
       } else {
         const { error } = await supabase
-          .from('suppliers' as any)
+          .from('suppliers')
           .insert([form]);
 
         if (error) throw error;
