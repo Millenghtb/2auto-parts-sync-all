@@ -51,7 +51,7 @@ const SupplierFormPage = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('suppliers')
+        .from('suppliers' as any)
         .select('*')
         .eq('id', id)
         .single();
@@ -66,14 +66,15 @@ const SupplierFormPage = () => {
         return;
       }
 
+      const supplier = data as any;
       setForm({
-        name: data.name || '',
-        contact_email: data.contact_email || '',
-        contact_phone: data.contact_phone || '',
-        address: data.address || '',
-        api_endpoint: data.api_endpoint || '',
-        api_key: data.api_key || '',
-        is_active: data.is_active ?? true,
+        name: supplier.name || '',
+        contact_email: supplier.contact_email || '',
+        contact_phone: supplier.contact_phone || '',
+        address: supplier.address || '',
+        api_endpoint: supplier.api_endpoint || '',
+        api_key: supplier.api_key || '',
+        is_active: supplier.is_active ?? true,
       });
     } catch (error) {
       console.error('Error fetching supplier:', error);
@@ -89,7 +90,7 @@ const SupplierFormPage = () => {
     try {
       if (isEditing) {
         const { error } = await supabase
-          .from('suppliers')
+          .from('suppliers' as any)
           .update(form)
           .eq('id', id);
 
@@ -101,7 +102,7 @@ const SupplierFormPage = () => {
         });
       } else {
         const { error } = await supabase
-          .from('suppliers')
+          .from('suppliers' as any)
           .insert([form]);
 
         if (error) throw error;
