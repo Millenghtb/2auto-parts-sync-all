@@ -25,30 +25,50 @@ export const useUserRoles = (user: User | null) => {
       return;
     }
 
+    let isMounted = true;
+    const controller = new AbortController();
+
     const fetchUserRoles = async () => {
       try {
+        console.log('useUserRoles: Fetching roles for user:', user.email);
+        
         const { data, error } = await supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .abortSignal(controller.signal);
 
         if (error) {
-          console.error('Error fetching user roles:', error);
+          console.error('useUserRoles: Error fetching user roles:', error);
           return;
         }
 
+        if (!isMounted) return;
+
         const userRoles = data.map(item => item.role as AppRole);
+        console.log('useUserRoles: Roles fetched:', userRoles);
         setRoles(userRoles);
         setIsAdmin(userRoles.includes('admin'));
       } catch (error) {
-        console.error('Error fetching user roles:', error);
+        if (error.name !== 'AbortError') {
+          console.error('useUserRoles: Error fetching user roles:', error);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchUserRoles();
-  }, [user]);
+    // Debounce the fetch to prevent multiple rapid calls
+    const timeoutId = setTimeout(fetchUserRoles, 100);
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+      clearTimeout(timeoutId);
+    };
+  }, [user?.id]); // Only depend on user.id, not the entire user object
 
   const hasRole = (role: AppRole): boolean => {
     return roles.includes(role);
