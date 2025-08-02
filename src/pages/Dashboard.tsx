@@ -20,36 +20,52 @@ const Dashboard = () => {
 
   useEffect(() => {
     let isMounted = true;
+    console.log('Dashboard: Setting up auth listener');
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (!isMounted) return;
+        console.log('Dashboard: Auth state change:', event, session?.user?.email);
+        
+        if (!isMounted) {
+          console.log('Dashboard: Component unmounted, ignoring auth change');
+          return;
+        }
         
         setSession(session);
         setUser(session?.user ?? null);
         
         // Navigate only on sign out to avoid loops
         if (event === 'SIGNED_OUT') {
+          console.log('Dashboard: User signed out, redirecting to auth');
           navigate("/auth");
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log('Dashboard: Token refreshed successfully');
         }
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!isMounted) return;
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log('Dashboard: Initial session check:', session?.user?.email, error);
+      
+      if (!isMounted) {
+        console.log('Dashboard: Component unmounted, ignoring initial session');
+        return;
+      }
       
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
       
       if (!session) {
+        console.log('Dashboard: No session found, redirecting to auth');
         navigate("/auth");
       }
     });
 
     return () => {
+      console.log('Dashboard: Cleaning up auth listener');
       isMounted = false;
       subscription.unsubscribe();
     };

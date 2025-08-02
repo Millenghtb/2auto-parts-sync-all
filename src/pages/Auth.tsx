@@ -23,21 +23,25 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      console.log('Auth: Attempting sign in for:', email);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Auth: Sign in error:', error);
         toast({
           title: "Ошибка входа",
           description: error.message,
           variant: "destructive",
         });
       } else {
+        console.log('Auth: Sign in successful, navigating to dashboard');
         navigate("/dashboard");
       }
     } catch (error) {
+      console.error('Auth: Unexpected error:', error);
       toast({
         title: "Ошибка",
         description: "Произошла неожиданная ошибка",
