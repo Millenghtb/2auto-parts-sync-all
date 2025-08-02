@@ -12,14 +12,18 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let isMounted = true;
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if (!isMounted) return;
+        
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
         
-        if (session) {
+        // Navigate only on specific events to avoid loops
+        if (event === 'SIGNED_IN' && session) {
           navigate("/dashboard");
         }
       }
@@ -27,6 +31,8 @@ const Index = () => {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
+      
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -36,7 +42,10 @@ const Index = () => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   if (loading) {
