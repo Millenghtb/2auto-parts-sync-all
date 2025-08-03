@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Users, Settings, Database, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import UserManagement from "@/components/UserManagement";
+
 
 interface AutomationSettings {
   id: string;
