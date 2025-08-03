@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { User, Session } from "@supabase/supabase-js";
 import { Settings, Store, ShoppingCart, Database, Users, Shield, Plus } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/AppSidebar";
@@ -137,6 +138,24 @@ const Dashboard = () => {
                 </p>
               </div>
 
+              {/* Быстрый доступ к панели управления */}
+              <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Панель управления
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground mb-4">
+                    Управляйте поставщиками и маркетплейсами, настраивайте автоматическую синхронизацию цен
+                  </p>
+                  <Button asChild>
+                    <Link to="/control-panel">Открыть панель управления</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -148,16 +167,10 @@ const Dashboard = () => {
                   <CardContent>
                     <div className="text-2xl font-bold">0</div>
                     <p className="text-xs text-muted-foreground">
-                      Настроенных поставщиков
+                      <Link to="/suppliers" className="text-primary hover:underline">
+                        Управление поставщиками
+                      </Link>
                     </p>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="mt-2"
-                      onClick={() => navigate('/suppliers')}
-                    >
-                      Управление
-                    </Button>
                   </CardContent>
                 </Card>
 
@@ -171,39 +184,27 @@ const Dashboard = () => {
                   <CardContent>
                     <div className="text-2xl font-bold">0</div>
                     <p className="text-xs text-muted-foreground">
-                      Активных маркетплейсов
+                      <Link to="/marketplaces" className="text-primary hover:underline">
+                        Настроить маркетплейсы
+                      </Link>
                     </p>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="mt-2"
-                      onClick={() => navigate('/marketplaces')}
-                    >
-                      Управление
-                    </Button>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">
-                      Подключения
+                      Настройки
                     </CardTitle>
-                    <Database className="h-4 w-4 text-muted-foreground" />
+                    <Settings className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">0</div>
+                    <div className="text-2xl font-bold">—</div>
                     <p className="text-xs text-muted-foreground">
-                      Активных подключений
+                      <Link to="/settings" className="text-primary hover:underline">
+                        Параметры системы
+                      </Link>
                     </p>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="mt-2"
-                      onClick={() => navigate('/system-settings')}
-                    >
-                      Настройки
-                    </Button>
                   </CardContent>
                 </Card>
 
@@ -216,23 +217,11 @@ const Dashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full"
-                        onClick={() => navigate('/suppliers/new')}
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Поставщик
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to="/suppliers/new">Добавить поставщика</Link>
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full"
-                        onClick={() => navigate('/marketplaces/new')}
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Маркетплейс
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to="/marketplaces/new">Добавить маркетплейс</Link>
                       </Button>
                     </div>
                   </CardContent>
@@ -265,11 +254,15 @@ const Dashboard = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Статус:</span>
-                        <span className="text-green-600">Работает</span>
+                        <span className="text-green-600">Онлайн</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Версия:</span>
-                        <span>1.0.0</span>
+                        <span>2.0.0</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Режим:</span>
+                        <span>Ручной</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Ваша роль:</span>

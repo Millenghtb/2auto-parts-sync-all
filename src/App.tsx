@@ -8,6 +8,10 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import SuppliersPage from "./pages/SuppliersPage";
 import SupplierFormPage from "./pages/SupplierFormPage";
+import MarketplacesPage from "./pages/MarketplacesPage";
+import MarketplaceFormPage from "./pages/MarketplaceFormPage";
+import ControlPanel from "./pages/ControlPanel";
+import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,9 +26,14 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/control-panel" element={<ControlPanel />} />
           <Route path="/suppliers" element={<SuppliersPage />} />
           <Route path="/suppliers/new" element={<SupplierFormPage />} />
           <Route path="/suppliers/:id/edit" element={<SupplierFormPage />} />
+          <Route path="/marketplaces" element={<MarketplacesPage />} />
+          <Route path="/marketplaces/new" element={<MarketplaceFormPage />} />
+          <Route path="/marketplaces/:id/edit" element={<MarketplaceFormPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

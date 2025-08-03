@@ -14,6 +14,291 @@ export type Database = {
   }
   public: {
     Tables: {
+      automation_settings: {
+        Row: {
+          auto_mode_enabled: boolean | null
+          created_at: string
+          id: string
+          max_requests_per_day: number | null
+          sync_interval_minutes: number | null
+          sync_period: string | null
+          updated_at: string
+        }
+        Insert: {
+          auto_mode_enabled?: boolean | null
+          created_at?: string
+          id?: string
+          max_requests_per_day?: number | null
+          sync_interval_minutes?: number | null
+          sync_period?: string | null
+          updated_at?: string
+        }
+        Update: {
+          auto_mode_enabled?: boolean | null
+          created_at?: string
+          id?: string
+          max_requests_per_day?: number | null
+          sync_interval_minutes?: number | null
+          sync_period?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketplaces: {
+        Row: {
+          api_endpoint: string | null
+          api_key: string | null
+          api_parameters: Json | null
+          created_at: string
+          id: string
+          is_active: boolean
+          login: string | null
+          name: string
+          password: string | null
+          pricing_action: string | null
+          pricing_value: number | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          api_endpoint?: string | null
+          api_key?: string | null
+          api_parameters?: Json | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          login?: string | null
+          name: string
+          password?: string | null
+          pricing_action?: string | null
+          pricing_value?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          api_endpoint?: string | null
+          api_key?: string | null
+          api_parameters?: Json | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          login?: string | null
+          name?: string
+          password?: string | null
+          pricing_action?: string | null
+          pricing_value?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          auto_name_update: boolean | null
+          created_at: string
+          current_price: number | null
+          id: string
+          last_updated: string | null
+          marketplace_article: string | null
+          marketplace_id: string | null
+          name_comparison_enabled: boolean | null
+          name_marketplace: string | null
+          name_supplier: string
+          new_price: number | null
+          price_status: string | null
+          supplier_article: string
+          supplier_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          auto_name_update?: boolean | null
+          created_at?: string
+          current_price?: number | null
+          id?: string
+          last_updated?: string | null
+          marketplace_article?: string | null
+          marketplace_id?: string | null
+          name_comparison_enabled?: boolean | null
+          name_marketplace?: string | null
+          name_supplier: string
+          new_price?: number | null
+          price_status?: string | null
+          supplier_article: string
+          supplier_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          auto_name_update?: boolean | null
+          created_at?: string
+          current_price?: number | null
+          id?: string
+          last_updated?: string | null
+          marketplace_article?: string | null
+          marketplace_id?: string | null
+          name_comparison_enabled?: boolean | null
+          name_marketplace?: string | null
+          name_supplier?: string
+          new_price?: number | null
+          price_status?: string | null
+          supplier_article?: string
+          supplier_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_marketplace_id_fkey"
+            columns: ["marketplace_id"]
+            isOneToOne: false
+            referencedRelation: "marketplaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storage_settings: {
+        Row: {
+          created_at: string
+          file_format: string | null
+          id: string
+          is_active: boolean | null
+          storage_login: string | null
+          storage_password: string | null
+          storage_path: string | null
+          storage_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          file_format?: string | null
+          id?: string
+          is_active?: boolean | null
+          storage_login?: string | null
+          storage_password?: string | null
+          storage_path?: string | null
+          storage_type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          file_format?: string | null
+          id?: string
+          is_active?: boolean | null
+          storage_login?: string | null
+          storage_password?: string | null
+          storage_path?: string | null
+          storage_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      supplier_customizations: {
+        Row: {
+          created_at: string
+          id: string
+          is_enabled: boolean | null
+          marketplace_id: string | null
+          supplier_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean | null
+          marketplace_id?: string | null
+          supplier_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean | null
+          marketplace_id?: string | null
+          supplier_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_customizations_marketplace_id_fkey"
+            columns: ["marketplace_id"]
+            isOneToOne: false
+            referencedRelation: "marketplaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_customizations_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppliers: {
+        Row: {
+          address: string | null
+          api_endpoint: string | null
+          api_key: string | null
+          api_parameters: Json | null
+          auto_name_update: boolean | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          name_comparison_enabled: boolean | null
+          one_by_one_mode: boolean | null
+          updated_at: string
+          upload_to_all_marketplaces: boolean | null
+          website_login: string | null
+          website_password: string | null
+        }
+        Insert: {
+          address?: string | null
+          api_endpoint?: string | null
+          api_key?: string | null
+          api_parameters?: Json | null
+          auto_name_update?: boolean | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          name_comparison_enabled?: boolean | null
+          one_by_one_mode?: boolean | null
+          updated_at?: string
+          upload_to_all_marketplaces?: boolean | null
+          website_login?: string | null
+          website_password?: string | null
+        }
+        Update: {
+          address?: string | null
+          api_endpoint?: string | null
+          api_key?: string | null
+          api_parameters?: Json | null
+          auto_name_update?: boolean | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_comparison_enabled?: boolean | null
+          one_by_one_mode?: boolean | null
+          updated_at?: string
+          upload_to_all_marketplaces?: boolean | null
+          website_login?: string | null
+          website_password?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
