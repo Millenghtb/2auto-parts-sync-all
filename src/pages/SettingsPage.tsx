@@ -147,7 +147,7 @@ const SettingsPage = () => {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="outline" onClick={() => navigate("/dashboard")}>
+        <Button variant="outline" onClick={() => navigate("/control-panel")}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Назад
         </Button>

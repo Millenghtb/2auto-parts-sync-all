@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Settings, RefreshCw, Download, Upload } from "lucide-react";
+import { Settings, RefreshCw, Download, Upload, TestTube, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { LoadingProgress } from "@/components/LoadingProgress";
 
 interface Supplier {
   id: string;
@@ -35,6 +36,8 @@ const ControlPanel = () => {
     sync_interval_minutes: 60
   });
   const [loading, setLoading] = useState(true);
+  const [showProgress, setShowProgress] = useState(false);
+  const [progressType, setProgressType] = useState<"download" | "upload">("download");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -100,12 +103,8 @@ const ControlPanel = () => {
       return;
     }
 
-    toast({
-      title: "Загрузка цен",
-      description: `Начата загрузка цен от ${selectedSuppliers.length} поставщика(ов)`,
-    });
-    
-    // Здесь будет логика загрузки цен
+    setProgressType("download");
+    setShowProgress(true);
   };
 
   const handleUploadPrices = () => {
@@ -118,12 +117,8 @@ const ControlPanel = () => {
       return;
     }
 
-    toast({
-      title: "Выгрузка цен",
-      description: `Начата выгрузка цен в ${selectedMarketplaces.length} маркетплейс(ов)`,
-    });
-    
-    // Здесь будет логика выгрузки цен
+    setProgressType("upload");
+    setShowProgress(true);
   };
 
   if (loading) {
@@ -134,14 +129,52 @@ const ControlPanel = () => {
     );
   }
 
+  if (showProgress) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="mb-6">
+          <Button variant="outline" onClick={() => navigate("/dashboard")}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Назад к дашборду
+          </Button>
+        </div>
+        <LoadingProgress
+          type={progressType}
+          suppliers={progressType === "download" ? selectedSuppliers : []}
+          marketplaces={progressType === "upload" ? selectedMarketplaces : []}
+          onCancel={() => setShowProgress(false)}
+          onComplete={() => {
+            setShowProgress(false);
+            toast({
+              title: "Операция завершена",
+              description: `${progressType === "download" ? "Загрузка" : "Выгрузка"} цен прошла успешно`,
+            });
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Панель управления</h1>
-        <Button variant="outline" onClick={() => navigate("/settings")}>
-          <Settings className="w-4 h-4 mr-2" />
-          Параметры
-        </Button>
+        <div className="flex items-center gap-4">
+          <Button variant="outline" onClick={() => navigate("/dashboard")}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Назад
+          </Button>
+          <h1 className="text-3xl font-bold">Панель управления</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigate("/sandbox")}>
+            <TestTube className="w-4 h-4 mr-2" />
+            Песочница
+          </Button>
+          <Button variant="outline" onClick={() => navigate("/settings")}>
+            <Settings className="w-4 h-4 mr-2" />
+            Параметры
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Edit, Trash2, Globe } from "lucide-react";
+import { Plus, Edit, Trash2, Globe, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Supplier {
@@ -127,11 +127,17 @@ const SuppliersPage = () => {
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Поставщики</h1>
-          <p className="text-muted-foreground">
-            Управление поставщиками и их настройками
-          </p>
+        <div className="flex items-center gap-4">
+          <Button variant="outline" onClick={() => navigate('/dashboard')}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Назад
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Поставщики</h1>
+            <p className="text-muted-foreground">
+              Управление поставщиками и их настройками
+            </p>
+          </div>
         </div>
         <Button onClick={() => navigate('/suppliers/new')}>
           <Plus className="h-4 w-4 mr-2" />
