@@ -106,6 +106,8 @@ export type Database = {
           name_supplier: string
           new_price: number | null
           price_status: string | null
+          pricing_action: string | null
+          pricing_value: number | null
           supplier_article: string
           supplier_id: string | null
           updated_at: string
@@ -123,6 +125,8 @@ export type Database = {
           name_supplier: string
           new_price?: number | null
           price_status?: string | null
+          pricing_action?: string | null
+          pricing_value?: number | null
           supplier_article: string
           supplier_id?: string | null
           updated_at?: string
@@ -140,6 +144,8 @@ export type Database = {
           name_supplier?: string
           new_price?: number | null
           price_status?: string | null
+          pricing_action?: string | null
+          pricing_value?: number | null
           supplier_article?: string
           supplier_id?: string | null
           updated_at?: string
