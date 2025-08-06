@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Settings, RefreshCw, Download, Upload, TestTube, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingProgress } from "@/components/LoadingProgress";
+import { PriceUpdateModal } from "@/components/PriceUpdateModal";
 
 interface Supplier {
   id: string;
@@ -38,6 +39,7 @@ const ControlPanel = () => {
   const [loading, setLoading] = useState(true);
   const [showProgress, setShowProgress] = useState(false);
   const [progressType, setProgressType] = useState<"download" | "upload">("download");
+  const [showPriceUpdateModal, setShowPriceUpdateModal] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -149,6 +151,11 @@ const ControlPanel = () => {
               title: "Операция завершена",
               description: `${progressType === "download" ? "Загрузка" : "Выгрузка"} цен прошла успешно`,
             });
+            
+            // Если это загрузка цен и не включен автоматический режим, открываем модальное окно
+            if (progressType === "download" && !automationSettings.auto_mode_enabled) {
+              setShowPriceUpdateModal(true);
+            }
           }}
         />
       </div>
@@ -291,6 +298,12 @@ const ControlPanel = () => {
           </div>
         </CardContent>
       </Card>
+
+      <PriceUpdateModal
+        isOpen={showPriceUpdateModal}
+        onClose={() => setShowPriceUpdateModal(false)}
+        supplierIds={selectedSuppliers}
+      />
     </div>
   );
 };
