@@ -110,6 +110,15 @@ const ControlPanel = () => {
   };
 
   const handleUploadPrices = () => {
+    if (selectedSuppliers.length === 0) {
+      toast({
+        title: "Предупреждение",
+        description: "Выберите поставщиков для выгрузки цен",
+        variant: "destructive",
+      });
+      return;
+    }
+    setProgressType("upload");
     setShowPriceUpdateModal(true);
   };
 
