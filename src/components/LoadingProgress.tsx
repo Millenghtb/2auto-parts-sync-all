@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download, Upload, CheckCircle, AlertCircle, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LoadingProgressProps {
   type: "download" | "upload";
@@ -61,31 +62,39 @@ export const LoadingProgress = ({
 
   const startProcess = async (initialSteps: ProcessStep[]) => {
     for (let i = 0; i < initialSteps.length; i++) {
+      const currentStep = initialSteps[i];
+      
       // Обновляем статус на "processing"
       setSteps(prev => prev.map((step, index) => 
         index === i ? { ...step, status: "processing" } : step
       ));
 
-      // Симуляция прогресса
-      for (let progress = 0; progress <= 100; progress += 10) {
-        await new Promise(resolve => setTimeout(resolve, 200));
+      try {
+        if (type === "download") {
+          // Реальная загрузка данных от поставщика
+          await loadSupplierData(currentStep.id, i);
+        } else {
+          // Реальная выгрузка данных в маркетплейс
+          await uploadToMarketplace(currentStep.id, i);
+        }
         
         setSteps(prev => prev.map((step, index) => 
-          index === i ? { ...step, progress } : step
+          index === i ? { 
+            ...step, 
+            status: "completed",
+            progress: 100
+          } : step
+        ));
+      } catch (error) {
+        setSteps(prev => prev.map((step, index) => 
+          index === i ? { 
+            ...step, 
+            status: "error",
+            progress: 100,
+            error: error instanceof Error ? error.message : "Произошла ошибка"
+          } : step
         ));
       }
-
-      // Случайная симуляция ошибки (10% вероятность)
-      const hasError = Math.random() < 0.1;
-      
-      setSteps(prev => prev.map((step, index) => 
-        index === i ? { 
-          ...step, 
-          status: hasError ? "error" : "completed",
-          progress: 100,
-          error: hasError ? "Ошибка соединения с API" : undefined
-        } : step
-      ));
 
       // Обновляем общий прогресс
       setOverallProgress(((i + 1) / initialSteps.length) * 100);
@@ -93,6 +102,55 @@ export const LoadingProgress = ({
 
     setIsCompleted(true);
     onComplete?.();
+  };
+
+  const loadSupplierData = async (supplierId: string, stepIndex: number) => {
+    // Симуляция загрузки данных с постепенным обновлением прогресса
+    const sampleProducts = [
+      { article: "ART001", name: "Товар 1", price: 1000 },
+      { article: "ART002", name: "Товар 2", price: 1500 },
+      { article: "ART003", name: "Товар 3", price: 2000 },
+      { article: "ART004", name: "Товар 4", price: 2500 },
+      { article: "ART005", name: "Товар 5", price: 3000 }
+    ];
+
+    for (let j = 0; j < sampleProducts.length; j++) {
+      await new Promise(resolve => setTimeout(resolve, 400));
+      
+      const progress = ((j + 1) / sampleProducts.length) * 100;
+      setSteps(prev => prev.map((step, index) => 
+        index === stepIndex ? { ...step, progress } : step
+      ));
+      
+      const product = sampleProducts[j];
+      
+      // Добавляем товар в базу данных
+      const { error } = await supabase
+        .from('products')
+        .insert({
+          supplier_id: supplierId,
+          supplier_article: product.article,
+          name_supplier: product.name,
+          current_price: product.price,
+          pricing_action: 'multiply',
+          pricing_value: 1.0
+        });
+        
+      if (error) {
+        throw new Error(`Ошибка добавления товара ${product.name}: ${error.message}`);
+      }
+    }
+  };
+
+  const uploadToMarketplace = async (marketplaceId: string, stepIndex: number) => {
+    // Симуляция выгрузки данных с постепенным обновлением прогресса
+    for (let j = 0; j <= 100; j += 20) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      setSteps(prev => prev.map((step, index) => 
+        index === stepIndex ? { ...step, progress: j } : step
+      ));
+    }
   };
 
   const getStatusIcon = (status: ProcessStep["status"]) => {
