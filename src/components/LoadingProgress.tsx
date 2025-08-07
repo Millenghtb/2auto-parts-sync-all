@@ -6,10 +6,20 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Upload, CheckCircle, AlertCircle, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
+interface Supplier {
+  id: string;
+  name: string;
+}
+
+interface Marketplace {
+  id: string;
+  name: string;
+}
+
 interface LoadingProgressProps {
   type: "download" | "upload";
-  suppliers?: string[];
-  marketplaces?: string[];
+  suppliers?: Supplier[];
+  marketplaces?: Marketplace[];
   onCancel?: () => void;
   onComplete?: () => void;
 }
@@ -39,8 +49,8 @@ export const LoadingProgress = ({
     if (type === "download") {
       suppliers.forEach(supplier => {
         initialSteps.push({
-          id: supplier,
-          name: `Загрузка цен от поставщика ${supplier}`,
+          id: supplier.id,
+          name: `Загрузка цен от поставщика ${supplier.name}`,
           status: "pending",
           progress: 0
         });
@@ -48,8 +58,8 @@ export const LoadingProgress = ({
     } else {
       marketplaces.forEach(marketplace => {
         initialSteps.push({
-          id: marketplace,
-          name: `Выгрузка цен в маркетплейс ${marketplace}`,
+          id: marketplace.id,
+          name: `Выгрузка цен в маркетплейс ${marketplace.name}`,
           status: "pending",
           progress: 0
         });

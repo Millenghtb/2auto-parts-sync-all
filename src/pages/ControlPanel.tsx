@@ -142,8 +142,8 @@ const ControlPanel = () => {
         </div>
         <LoadingProgress
           type={progressType}
-          suppliers={progressType === "download" ? selectedSuppliers : []}
-          marketplaces={progressType === "upload" ? selectedMarketplaces : []}
+          suppliers={progressType === "download" ? suppliers.filter(s => selectedSuppliers.includes(s.id)) : []}
+          marketplaces={progressType === "upload" ? marketplaces.filter(m => selectedMarketplaces.includes(m.id)) : []}
           onCancel={() => setShowProgress(false)}
           onComplete={() => {
             setShowProgress(false);

@@ -47,8 +47,8 @@ const SandboxPage = () => {
       <div className="container mx-auto p-6">
         <LoadingProgress
           type={testType}
-          suppliers={testType === "download" ? ["Test Supplier"] : []}
-          marketplaces={testType === "upload" ? ["Test Marketplace"] : []}
+          suppliers={testType === "download" ? [{ id: "test-supplier", name: "Test Supplier" }] : []}
+          marketplaces={testType === "upload" ? [{ id: "test-marketplace", name: "Test Marketplace" }] : []}
           onCancel={() => {
             setShowProgress(false);
             setTesting(false);
