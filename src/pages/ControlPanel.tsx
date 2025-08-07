@@ -110,15 +110,11 @@ const ControlPanel = () => {
   };
 
   const handleUploadPrices = () => {
-    if (selectedMarketplaces.length === 0) {
-      toast({
-        title: "Предупреждение",
-        description: "Выберите хотя бы один маркетплейс",
-        variant: "destructive",
-      });
-      return;
-    }
+    setShowPriceUpdateModal(true);
+  };
 
+  const handleStartUpload = (selectedMarketplaceIds: string[]) => {
+    setSelectedMarketplaces(selectedMarketplaceIds);
     setProgressType("upload");
     setShowProgress(true);
   };
@@ -303,6 +299,9 @@ const ControlPanel = () => {
         isOpen={showPriceUpdateModal}
         onClose={() => setShowPriceUpdateModal(false)}
         supplierIds={selectedSuppliers}
+        marketplaces={marketplaces}
+        mode={progressType === "upload" ? "upload" : "download"}
+        onUpload={handleStartUpload}
       />
     </div>
   );

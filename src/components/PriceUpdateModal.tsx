@@ -40,19 +40,31 @@ interface Product {
   pricing_value: number | null;
 }
 
+interface Marketplace {
+  id: string;
+  name: string;
+}
+
 interface PriceUpdateModalProps {
   isOpen: boolean;
   onClose: () => void;
   supplierIds: string[];
+  marketplaces?: Marketplace[];
+  mode?: 'download' | 'upload';
+  onUpload?: (selectedMarketplaces: string[]) => void;
 }
 
 export const PriceUpdateModal: React.FC<PriceUpdateModalProps> = ({
   isOpen,
   onClose,
   supplierIds,
+  marketplaces = [],
+  mode = 'download',
+  onUpload,
 }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [selectedMarketplaces, setSelectedMarketplaces] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [globalPricingAction, setGlobalPricingAction] = useState<string>('multiply');
   const [globalPricingValue, setGlobalPricingValue] = useState<number>(1.0);
@@ -63,6 +75,47 @@ export const PriceUpdateModal: React.FC<PriceUpdateModalProps> = ({
       fetchProducts();
     }
   }, [isOpen, supplierIds]);
+
+  const handleMarketplaceSelect = (marketplaceId: string, checked: boolean) => {
+    const newSelected = new Set(selectedMarketplaces);
+    if (checked) {
+      newSelected.add(marketplaceId);
+    } else {
+      newSelected.delete(marketplaceId);
+    }
+    setSelectedMarketplaces(newSelected);
+  };
+
+  const handleMarketplaceSelectAll = () => {
+    setSelectedMarketplaces(new Set(marketplaces.map(m => m.id)));
+  };
+
+  const handleMarketplaceDeselectAll = () => {
+    setSelectedMarketplaces(new Set());
+  };
+
+  const handleUpload = () => {
+    if (selectedMarketplaces.size === 0) {
+      toast({
+        title: 'Предупреждение',
+        description: 'Выберите маркетплейсы для выгрузки',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (selectedProducts.size === 0) {
+      toast({
+        title: 'Предупреждение',
+        description: 'Выберите товары для выгрузки',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    onUpload?.(Array.from(selectedMarketplaces));
+    onClose();
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -204,8 +257,42 @@ export const PriceUpdateModal: React.FC<PriceUpdateModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-7xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Обновление цен</DialogTitle>
+          <DialogTitle>
+            {mode === 'download' ? 'Обновление цен' : 'Выгрузка товаров'}
+          </DialogTitle>
         </DialogHeader>
+
+        {mode === 'upload' && marketplaces.length > 0 && (
+          <div className="p-4 bg-muted rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium">Выберите маркетплейсы для выгрузки:</h3>
+              <div className="flex gap-2">
+                <Button onClick={handleMarketplaceSelectAll} variant="outline" size="sm">
+                  Выбрать все
+                </Button>
+                <Button onClick={handleMarketplaceDeselectAll} variant="outline" size="sm">
+                  Снять все
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {marketplaces.map((marketplace) => (
+                <div key={marketplace.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={marketplace.id}
+                    checked={selectedMarketplaces.has(marketplace.id)}
+                    onCheckedChange={(checked) => 
+                      handleMarketplaceSelect(marketplace.id, checked as boolean)
+                    }
+                  />
+                  <label htmlFor={marketplace.id} className="text-sm cursor-pointer">
+                    {marketplace.name}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-4 items-center p-4 bg-muted rounded-lg">
           <div className="flex gap-2">
@@ -312,10 +399,18 @@ export const PriceUpdateModal: React.FC<PriceUpdateModalProps> = ({
         <div className="flex justify-between items-center p-4 border-t">
           <div className="text-sm text-muted-foreground">
             Выбрано товаров: {selectedProducts.size} из {products.length}
+            {mode === 'upload' && ` | Выбрано маркетплейсов: ${selectedMarketplaces.size} из ${marketplaces.length}`}
           </div>
-          <Button onClick={onClose} variant="outline">
-            Закрыть
-          </Button>
+          <div className="flex gap-2">
+            {mode === 'upload' && (
+              <Button onClick={handleUpload} disabled={loading}>
+                Выгрузить в маркетплейсы
+              </Button>
+            )}
+            <Button onClick={onClose} variant="outline">
+              Закрыть
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
