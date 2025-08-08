@@ -38,6 +38,7 @@ interface Product {
   price_status: string | null;
   pricing_action: string | null;
   pricing_value: number | null;
+  display_name?: string;
 }
 
 interface Marketplace {
@@ -120,16 +121,59 @@ export const PriceUpdateModal: React.FC<PriceUpdateModalProps> = ({
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Сначала загружаем товары поставщиков
+      const { data: supplierProducts, error: supplierError } = await supabase
         .from('products')
         .select('*')
         .in('supplier_id', supplierIds)
         .order('price_status', { ascending: false });
 
-      if (error) throw error;
+      if (supplierError) throw supplierError;
+
+      if (!supplierProducts || supplierProducts.length === 0) {
+        setProducts([]);
+        return;
+      }
+
+      // Получаем уникальные артикулы поставщиков для поиска соответствий
+      const supplierArticles = [...new Set(supplierProducts.map(p => p.supplier_article))];
+
+      // Загружаем все товары с маркетплейсов, которые имеют соответствующие артикулы
+      const { data: marketplaceProducts, error: marketplaceError } = await supabase
+        .from('products')
+        .select('*')
+        .in('marketplace_article', supplierArticles)
+        .not('marketplace_id', 'is', null);
+
+      if (marketplaceError) {
+        console.warn('Error fetching marketplace products:', marketplaceError);
+      }
+
+      // Создаем карту соответствий артикул поставщика -> данные с маркетплейса
+      const articleMapping = new Map();
+      if (marketplaceProducts) {
+        marketplaceProducts.forEach(mp => {
+          if (mp.marketplace_article) {
+            articleMapping.set(mp.marketplace_article, mp);
+          }
+        });
+      }
+
+      // Обогащаем данные поставщиков названиями с маркетплейсов
+      const enrichedProducts = supplierProducts.map(supplierProduct => {
+        const matchedMarketplaceProduct = articleMapping.get(supplierProduct.supplier_article);
+        
+        return {
+          ...supplierProduct,
+          name_marketplace: matchedMarketplaceProduct?.name_marketplace || null,
+          marketplace_article: matchedMarketplaceProduct?.marketplace_article || null,
+          // Если есть соответствие, используем название с маркетплейса, иначе название поставщика
+          display_name: matchedMarketplaceProduct?.name_marketplace || supplierProduct.name_supplier
+        };
+      });
 
       // Сортировка: сначала товары с изменениями цен
-      const sortedProducts = (data || []).sort((a, b) => {
+      const sortedProducts = enrichedProducts.sort((a, b) => {
         const statusOrder = { 'increased': 0, 'decreased': 1, 'unchanged': 2, 'missing': 3 };
         const aOrder = statusOrder[a.price_status as keyof typeof statusOrder] ?? 4;
         const bOrder = statusOrder[b.price_status as keyof typeof statusOrder] ?? 4;
@@ -375,8 +419,8 @@ export const PriceUpdateModal: React.FC<PriceUpdateModalProps> = ({
                         }
                       />
                     </TableCell>
-                    <TableCell className="max-w-xs truncate" title={product.name_supplier}>
-                      {product.name_supplier}
+                    <TableCell className="max-w-xs truncate" title={product.display_name || product.name_supplier}>
+                      {product.display_name || product.name_supplier}
                     </TableCell>
                     <TableCell>{product.marketplace_article || '-'}</TableCell>
                     <TableCell>{product.supplier_article}</TableCell>
