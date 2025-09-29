@@ -1,25 +1,61 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, TestTube, Play, AlertTriangle, Code } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, TestTube, Play, AlertTriangle, Code, ShoppingCart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingProgress } from "@/components/LoadingProgress";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Marketplace {
+  id: string;
+  name: string;
+}
 
 const SandboxPage = () => {
   const [testing, setTesting] = useState(false);
   const [showProgress, setShowProgress] = useState(false);
-  const [testType, setTestType] = useState<"download" | "upload">("download");
+  const [testType, setTestType] = useState<"download" | "upload" | "marketplace_products">("download");
   const [testRequests, setTestRequests] = useState({ used: 0, max: 100 });
+  const [marketplaces, setMarketplaces] = useState<Marketplace[]>([]);
+  const [selectedMarketplace, setSelectedMarketplace] = useState<string>("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const runTest = async (type: "download" | "upload") => {
+  useEffect(() => {
+    fetchMarketplaces();
+  }, []);
+
+  const fetchMarketplaces = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('marketplaces')
+        .select('id, name')
+        .eq('is_active', true);
+      
+      if (error) throw error;
+      setMarketplaces(data || []);
+    } catch (error) {
+      console.error('Error fetching marketplaces:', error);
+    }
+  };
+
+  const runTest = async (type: "download" | "upload" | "marketplace_products") => {
     if (testRequests.used >= testRequests.max) {
       toast({
         title: "Лимит исчерпан",
         description: "Достигнут лимит тестовых запросов",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (type === "marketplace_products" && !selectedMarketplace) {
+      toast({
+        title: "Выберите маркетплейс",
+        description: "Для тестирования загрузки товаров необходимо выбрать маркетплейс",
         variant: "destructive",
       });
       return;
@@ -48,7 +84,8 @@ const SandboxPage = () => {
         <LoadingProgress
           type={testType}
           suppliers={testType === "download" ? [{ id: "test-supplier", name: "Test Supplier" }] : []}
-          marketplaces={testType === "upload" ? [{ id: "test-marketplace", name: "Test Marketplace" }] : []}
+          marketplaces={testType === "upload" ? [{ id: "test-marketplace", name: "Test Marketplace" }] : 
+                       testType === "marketplace_products" ? marketplaces.filter(m => m.id === selectedMarketplace) : []}
           onCancel={() => {
             setShowProgress(false);
             setTesting(false);
@@ -143,6 +180,31 @@ const SandboxPage = () => {
                 <Play className="w-4 h-4 mr-2" />
                 Тест выгрузки цен
               </Button>
+
+              <div className="space-y-2">
+                <Select value={selectedMarketplace} onValueChange={setSelectedMarketplace}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите маркетплейс" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {marketplaces.map((marketplace) => (
+                      <SelectItem key={marketplace.id} value={marketplace.id}>
+                        {marketplace.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Button 
+                  onClick={() => runTest("marketplace_products")}
+                  disabled={testing || testRequests.used >= testRequests.max || !selectedMarketplace}
+                  className="w-full"
+                  variant="secondary"
+                >
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  Тест загрузки товаров
+                </Button>
+              </div>
             </div>
 
             {testRequests.used >= testRequests.max && (

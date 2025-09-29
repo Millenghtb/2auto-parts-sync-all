@@ -3,7 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Upload, CheckCircle, AlertCircle, X } from "lucide-react";
+import { Download, Upload, CheckCircle, AlertCircle, X, ShoppingCart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Supplier {
@@ -17,7 +17,7 @@ interface Marketplace {
 }
 
 interface LoadingProgressProps {
-  type: "download" | "upload";
+  type: "download" | "upload" | "marketplace_products";
   suppliers?: Supplier[];
   marketplaces?: Marketplace[];
   onCancel?: () => void;
@@ -55,11 +55,20 @@ export const LoadingProgress = ({
           progress: 0
         });
       });
-    } else {
+    } else if (type === "upload") {
       marketplaces.forEach(marketplace => {
         initialSteps.push({
           id: marketplace.id,
           name: `Выгрузка цен в маркетплейс ${marketplace.name}`,
+          status: "pending",
+          progress: 0
+        });
+      });
+    } else if (type === "marketplace_products") {
+      marketplaces.forEach(marketplace => {
+        initialSteps.push({
+          id: marketplace.id,
+          name: `Загрузка товаров из ${marketplace.name}`,
           status: "pending",
           progress: 0
         });
@@ -83,9 +92,12 @@ export const LoadingProgress = ({
         if (type === "download") {
           // Реальная загрузка данных от поставщика
           await loadSupplierData(currentStep.id, i);
-        } else {
+        } else if (type === "upload") {
           // Реальная выгрузка данных в маркетплейс
           await uploadToMarketplace(currentStep.id, i);
+        } else if (type === "marketplace_products") {
+          // Загрузка товаров из маркетплейса
+          await loadMarketplaceProducts(currentStep.id, i);
         }
         
         setSteps(prev => prev.map((step, index) => 
@@ -163,6 +175,46 @@ export const LoadingProgress = ({
     }
   };
 
+  const loadMarketplaceProducts = async (marketplaceId: string, stepIndex: number) => {
+    // Симуляция загрузки товаров из маркетплейса
+    const sampleMarketplaceProducts = [
+      { sku: "MP001", name: "Смартфон Samsung Galaxy", price: 45000, category: "Электроника" },
+      { sku: "MP002", name: "Ноутбук Lenovo ThinkPad", price: 85000, category: "Компьютеры" },
+      { sku: "MP003", name: "Наушники Sony WH-1000XM4", price: 25000, category: "Аудио" },
+      { sku: "MP004", name: "Планшет iPad Air", price: 55000, category: "Планшеты" },
+      { sku: "MP005", name: "Монитор LG UltraWide", price: 35000, category: "Мониторы" }
+    ];
+
+    for (let j = 0; j < sampleMarketplaceProducts.length; j++) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const progress = ((j + 1) / sampleMarketplaceProducts.length) * 100;
+      setSteps(prev => prev.map((step, index) => 
+        index === stepIndex ? { ...step, progress } : step
+      ));
+      
+      const product = sampleMarketplaceProducts[j];
+      
+      // Добавляем товар из маркетплейса в базу данных
+      const { error } = await supabase
+        .from('products')
+        .insert({
+          marketplace_id: marketplaceId,
+          marketplace_article: product.sku,
+          name_marketplace: product.name,
+          current_price: product.price,
+          pricing_action: 'multiply',
+          pricing_value: 1.0,
+          supplier_article: `SUP_${product.sku}`,
+          name_supplier: product.name
+        });
+        
+      if (error) {
+        throw new Error(`Ошибка добавления товара ${product.name}: ${error.message}`);
+      }
+    }
+  };
+
   const getStatusIcon = (status: ProcessStep["status"]) => {
     switch (status) {
       case "completed":
@@ -199,10 +251,15 @@ export const LoadingProgress = ({
                 <Download className="w-5 h-5" />
                 Загрузка цен от поставщиков
               </>
-            ) : (
+            ) : type === "upload" ? (
               <>
                 <Upload className="w-5 h-5" />
                 Выгрузка цен в маркетплейсы
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-5 h-5" />
+                Загрузка товаров из маркетплейсов
               </>
             )}
           </CardTitle>
