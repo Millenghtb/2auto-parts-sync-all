@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Store, ShoppingCart, Settings, Users, Database, Home, Plus } from "lucide-react";
+import { Store, ShoppingCart, Settings, Users, Database, Home, Plus, Wallet } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -30,6 +30,7 @@ const AppSidebar = ({ user }: AppSidebarProps) => {
     { title: "Главная", url: "/dashboard", icon: Home },
     { title: "Поставщики", url: "/suppliers", icon: Store },
     { title: "Маркетплейсы", url: "/marketplaces", icon: ShoppingCart },
+    { title: "Kaspi.kz", url: "/kaspi", icon: Wallet },
     { title: "Системные параметры", url: "/system-settings", icon: Settings },
   ];
 
