@@ -96,11 +96,12 @@ export interface AcceptOrderRequest {
 
 // Kaspi API клиент
 export class KaspiApiClient {
-  private readonly baseUrl = 'https://kaspi.kz/shop/api/v2';
+  private readonly baseUrl: string;
   private readonly authToken: string;
 
-  constructor(authToken: string) {
+  constructor(authToken: string, baseUrl: string = 'https://kaspi.kz/shop/api/v2') {
     this.authToken = authToken;
+    this.baseUrl = baseUrl;
   }
 
   private async makeRequest<T>(
@@ -133,10 +134,10 @@ export class KaspiApiClient {
   async getOrders(params: OrdersParams = {}): Promise<Order[]> {
     const searchParams = new URLSearchParams();
     
-    if (params.filter) searchParams.append('filter', params.filter);
-    if (params.sort) searchParams.append('sort', params.sort);
-    if (params.page) searchParams.append('page', params.page.toString());
-    if (params.pageSize) searchParams.append('pageSize', params.pageSize.toString());
+    if (params.filter) searchParams.append('filter[orders][status]', params.filter);
+    if (params.sort) searchParams.append('sort[orders]', params.sort);
+    if (params.page) searchParams.append('page[number]', params.page.toString());
+    if (params.pageSize) searchParams.append('page[limit]', params.pageSize.toString());
 
     const queryString = searchParams.toString();
     const endpoint = `/orders${queryString ? `?${queryString}` : ''}`;
@@ -151,24 +152,36 @@ export class KaspiApiClient {
   }
 
   async acceptOrder(orderId: string, code: string): Promise<void> {
-    const body: AcceptOrderRequest = {
-      type: 'orders',
-      id: orderId,
-      code: code,
-      status: OrderStatus.ACCEPTED_BY_MERCHANT,
+    const body = {
+      data: {
+        type: 'orders',
+        id: orderId,
+        attributes: {
+          code: code,
+          status: OrderStatus.ACCEPTED_BY_MERCHANT,
+        }
+      }
     };
 
     await this.makeRequest(`/orders/${orderId}/status`, {
-      method: 'POST',
+      method: 'PATCH',
       body: JSON.stringify(body),
     });
   }
 
   async updateOrderStatus(orderId: string, status: OrderStatus): Promise<void> {
-    const body: UpdateOrderStatusRequest = { status };
+    const body = {
+      data: {
+        type: 'orders',
+        id: orderId,
+        attributes: {
+          status: status,
+        }
+      }
+    };
 
     await this.makeRequest(`/orders/${orderId}/status`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(body),
     });
   }
@@ -220,12 +233,19 @@ export class KaspiApiClient {
 
   async addProduct(product: Product): Promise<{ uploadCode: string; status: string }> {
     const validatedProduct = ProductSchema.parse(product);
-    const response = await this.makeRequest<{ uploadCode: string; status: string }>('/goods', {
+    const body = {
+      data: {
+        type: 'goods',
+        attributes: validatedProduct
+      }
+    };
+    
+    const response = await this.makeRequest<{ data: { uploadCode: string; status: string } }>('/goods', {
       method: 'POST',
-      body: JSON.stringify(validatedProduct),
+      body: JSON.stringify(body),
     });
 
-    return response;
+    return response.data;
   }
 }
 
