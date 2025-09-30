@@ -38,30 +38,30 @@ export function KaspiPriceListDialog({ isOpen, onClose, marketplaceId }: KaspiPr
 
     setLoading(true);
     try {
-      // Получаем данные маркетплейса
+      // Получаем данные маркетплейса с проверкой API
       const { data: marketplace, error: marketplaceError } = await supabase
         .from('marketplaces')
-        .select('api_key, api_endpoint')
+        .select('api_key, api_endpoint, name')
         .eq('id', marketplaceId)
         .single();
 
       if (marketplaceError || !marketplace) {
-        throw new Error('Маркетплейс не найден');
+        throw new Error('Маркетплейс не найден в системе');
       }
 
       if (!marketplace.api_key) {
-        throw new Error('API ключ не настроен для этого маркетплейса');
+        throw new Error(`API ключ не настроен для маркетплейса "${marketplace.name}". Добавьте API ключ в настройках маркетплейса.`);
       }
 
-      // Инициализируем клиент Kaspi API
+      // Проверяем валидность API ключа через попытку инициализации клиента
       const kaspiClient = new KaspiApiClient(
         marketplace.api_key,
         marketplace.api_endpoint || undefined
       );
 
-      // Загружаем товары (используем метод getProducts, если он есть, или заглушку)
-      // В документации Kaspi нет прямого метода получения всех товаров,
-      // поэтому загружаем из нашей базы products где marketplace_id = marketplaceId
+      // Загружаем товары из базы данных для выбранного маркетплейса
+      // API Kaspi не предоставляет метод получения списка всех товаров продавца,
+      // поэтому используем локальную базу с товарами, которые были загружены ранее
       const { data: dbProducts, error: dbError } = await supabase
         .from('products')
         .select('id, name_marketplace, marketplace_article, supplier_article, current_price')
@@ -69,7 +69,11 @@ export function KaspiPriceListDialog({ isOpen, onClose, marketplaceId }: KaspiPr
 
       if (dbError) throw dbError;
 
-      const formattedProducts: KaspiProduct[] = (dbProducts || []).map(p => ({
+      if (!dbProducts || dbProducts.length === 0) {
+        throw new Error(`Товары для маркетплейса "${marketplace.name}" не найдены. Сначала загрузите товары через функцию "Загрузка цен".`);
+      }
+
+      const formattedProducts: KaspiProduct[] = dbProducts.map(p => ({
         id: p.id,
         name: p.name_marketplace || 'Не указано',
         kaspiArticle: p.marketplace_article || 'Не указано',
@@ -81,15 +85,16 @@ export function KaspiPriceListDialog({ isOpen, onClose, marketplaceId }: KaspiPr
 
       toast({
         title: "Успешно",
-        description: `Загружено товаров: ${formattedProducts.length}`,
+        description: `Загружено товаров из "${marketplace.name}": ${formattedProducts.length}`,
       });
     } catch (error) {
       console.error('Error loading products:', error);
       toast({
-        title: "Ошибка",
+        title: "Ошибка загрузки",
         description: error instanceof Error ? error.message : "Не удалось загрузить товары",
         variant: "destructive",
       });
+      setProducts([]);
     } finally {
       setLoading(false);
     }

@@ -131,7 +131,7 @@ const ControlPanel = () => {
     setShowProgress(true);
   };
 
-  const handleLoadKaspiPriceList = () => {
+  const handleLoadKaspiPriceList = async () => {
     if (selectedMarketplaces.length === 0) {
       toast({
         title: "Предупреждение",
@@ -141,8 +141,34 @@ const ControlPanel = () => {
       return;
     }
     
-    // Используем первый выбранный маркетплейс
-    setSelectedKaspiMarketplace(selectedMarketplaces[0]);
+    // Проверяем, что у выбранного маркетплейса настроен API ключ
+    const marketplaceId = selectedMarketplaces[0];
+    const { data: marketplace, error } = await supabase
+      .from('marketplaces')
+      .select('api_key, name')
+      .eq('id', marketplaceId)
+      .single();
+
+    if (error || !marketplace) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось проверить настройки маркетплейса",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!marketplace.api_key) {
+      toast({
+        title: "API не настроен",
+        description: `Для маркетплейса "${marketplace.name}" не настроен API ключ. Добавьте его в настройках.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Используем выбранный маркетплейс с настроенным API
+    setSelectedKaspiMarketplace(marketplaceId);
     setShowKaspiPriceList(true);
   };
 
