@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Settings, RefreshCw, Download, Upload, TestTube, ArrowLeft } from "lucide-react";
+import { Settings, RefreshCw, Download, Upload, TestTube, ArrowLeft, FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingProgress } from "@/components/LoadingProgress";
 import { PriceUpdateModal } from "@/components/PriceUpdateModal";
+import { KaspiPriceListDialog } from "@/components/KaspiPriceListDialog";
 
 interface Supplier {
   id: string;
@@ -40,6 +41,8 @@ const ControlPanel = () => {
   const [showProgress, setShowProgress] = useState(false);
   const [progressType, setProgressType] = useState<"download" | "upload">("download");
   const [showPriceUpdateModal, setShowPriceUpdateModal] = useState(false);
+  const [showKaspiPriceList, setShowKaspiPriceList] = useState(false);
+  const [selectedKaspiMarketplace, setSelectedKaspiMarketplace] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -126,6 +129,21 @@ const ControlPanel = () => {
     setSelectedMarketplaces(selectedMarketplaceIds);
     setProgressType("upload");
     setShowProgress(true);
+  };
+
+  const handleLoadKaspiPriceList = () => {
+    if (selectedMarketplaces.length === 0) {
+      toast({
+        title: "Предупреждение",
+        description: "Выберите маркетплейс для загрузки прайс-листа",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Используем первый выбранный маркетплейс
+    setSelectedKaspiMarketplace(selectedMarketplaces[0]);
+    setShowKaspiPriceList(true);
   };
 
   if (loading) {
@@ -273,10 +291,16 @@ const ControlPanel = () => {
                     </div>
                   ))}
                 </div>
-                <Button onClick={handleUploadPrices} className="w-full">
-                  <Upload className="w-4 h-4 mr-2" />
-                  Выгрузить цены в выбранные маркетплейсы
-                </Button>
+                <div className="space-y-2">
+                  <Button onClick={handleUploadPrices} className="w-full">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Выгрузить цены в выбранные маркетплейсы
+                  </Button>
+                  <Button onClick={handleLoadKaspiPriceList} variant="outline" className="w-full">
+                    <FileDown className="w-4 h-4 mr-2" />
+                    Загрузить прайс-лист из Kaspi
+                  </Button>
+                </div>
               </>
             )}
           </CardContent>
@@ -311,6 +335,12 @@ const ControlPanel = () => {
         marketplaces={marketplaces}
         mode={progressType === "upload" ? "upload" : "download"}
         onUpload={handleStartUpload}
+      />
+
+      <KaspiPriceListDialog
+        isOpen={showKaspiPriceList}
+        onClose={() => setShowKaspiPriceList(false)}
+        marketplaceId={selectedKaspiMarketplace}
       />
     </div>
   );
