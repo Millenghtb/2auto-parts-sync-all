@@ -96,19 +96,24 @@ export interface AcceptOrderRequest {
 
 // Kaspi API клиент
 export class KaspiApiClient {
-  private readonly baseUrl: string;
+  private readonly baseUrlV2: string;
+  private readonly baseUrlShop: string;
   private readonly authToken: string;
 
-  constructor(authToken: string, baseUrl: string = 'https://kaspi.kz/shop/api/v2') {
+  constructor(authToken: string, baseUrl?: string) {
     this.authToken = authToken;
-    this.baseUrl = baseUrl;
+    // API использует два разных базовых URL согласно документации
+    this.baseUrlV2 = baseUrl || 'https://kaspi.kz/shop/api/v2';
+    this.baseUrlShop = 'https://kaspi.kz/shop/api';
   }
 
   private async makeRequest<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    useShopUrl: boolean = false
   ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
+    const baseUrl = useShopUrl ? this.baseUrlShop : this.baseUrlV2;
+    const url = `${baseUrl}${endpoint}`;
     
     const headers = {
       'X-Auth-Token': this.authToken,
@@ -217,36 +222,37 @@ export class KaspiApiClient {
   }
 
   // Работа с товарами и категориями
+  // Согласно документации Kaspi API, endpoints для товаров используют /shop/api (без v2)
   async getCategories(): Promise<Category[]> {
-    const response = await this.makeRequest<{ data: any[] }>('/categories');
+    const response = await this.makeRequest<{ data: any[] }>('/products/classification/categories', {}, true);
     return response.data.map(category => CategorySchema.parse(category));
   }
 
   async getCategoryAttributes(categoryCode: string): Promise<Attribute[]> {
-    const response = await this.makeRequest<{ data: any[] }>(`/categories/${categoryCode}/attributes`);
-    return response.data.map(attr => AttributeSchema.parse(attr));
+    const encodedCategory = encodeURIComponent(categoryCode);
+    const response = await this.makeRequest<any[]>(`/products/classification/attributes?c=${encodedCategory}`, {}, true);
+    return response.map(attr => AttributeSchema.parse(attr));
   }
 
-  async getProductSchema(): Promise<any> {
-    return this.makeRequest('/goods/schema');
-  }
-
-  async addProduct(product: Product): Promise<{ uploadCode: string; status: string }> {
+  async addProduct(product: Product): Promise<{ code: string; status: string }> {
     const validatedProduct = ProductSchema.parse(product);
-    const body = {
-      data: {
-        type: 'goods',
-        attributes: validatedProduct
-      }
-    };
+    // API ожидает массив товаров согласно документации
+    const body = [validatedProduct];
     
-    const response = await this.makeRequest<{ data: { uploadCode: string; status: string } }>('/goods', {
+    const response = await this.makeRequest<{ code: string; status: string }>('/products/import', {
       method: 'POST',
       body: JSON.stringify(body),
-    });
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      }
+    }, true);
 
-    return response.data;
+    return response;
   }
+
+  // ВАЖНО: Kaspi API НЕ предоставляет endpoint для получения списка товаров продавца
+  // Товары нужно хранить в локальной базе данных после загрузки через API
 }
 
 // Хелперы для работы со статусами

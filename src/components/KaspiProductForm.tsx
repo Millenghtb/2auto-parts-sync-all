@@ -120,7 +120,7 @@ export const KaspiProductForm = ({ kaspiClient, onProductAdded }: KaspiProductFo
       
       toast({
         title: "Товар добавлен",
-        description: `Товар успешно добавлен. Код загрузки: ${result.uploadCode}`,
+        description: `Товар успешно добавлен. Код загрузки: ${result.code}`,
       });
 
       // Сброс формы

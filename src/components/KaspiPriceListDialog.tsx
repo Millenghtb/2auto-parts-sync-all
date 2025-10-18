@@ -7,6 +7,7 @@ import { Download, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { KaspiApiClient } from "@/lib/kaspi-api";
 import { supabase } from "@/integrations/supabase/client";
+import * as XLSX from 'xlsx';
 
 interface KaspiProduct {
   id: string;
@@ -100,7 +101,7 @@ export function KaspiPriceListDialog({ isOpen, onClose, marketplaceId }: KaspiPr
     }
   };
 
-  const handleExportToFile = () => {
+  const handleExportToExcel = () => {
     if (products.length === 0) {
       toast({
         title: "Предупреждение",
@@ -110,35 +111,38 @@ export function KaspiPriceListDialog({ isOpen, onClose, marketplaceId }: KaspiPr
       return;
     }
 
-    // Формируем CSV контент
-    const headers = ['Наименование товара', 'Артикул Каспи', 'Артикул поставщика', 'Цена'];
-    const csvContent = [
-      headers.join(';'),
+    // Подготавливаем данные для Excel
+    const worksheetData = [
+      ['Наименование товара', 'Артикул Каспи', 'Артикул поставщика', 'Цена (₸)'],
       ...products.map(p => [
-        `"${p.name}"`,
+        p.name,
         p.kaspiArticle,
         p.supplierArticle,
-        p.price.toString()
-      ].join(';'))
-    ].join('\n');
+        p.price
+      ])
+    ];
 
-    // Добавляем BOM для корректного отображения кириллицы в Excel
-    const bom = '\uFEFF';
-    const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    
-    // Создаем ссылку для скачивания
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `kaspi_pricelist_${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    // Создаем рабочую книгу и лист
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Прайс-лист');
+
+    // Настраиваем ширину колонок
+    const columnWidths = [
+      { wch: 50 }, // Наименование товара
+      { wch: 20 }, // Артикул Каспи
+      { wch: 25 }, // Артикул поставщика
+      { wch: 15 }, // Цена
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    // Сохраняем файл
+    const fileName = `kaspi_pricelist_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
 
     toast({
       title: "Успешно",
-      description: "Прайс-лист сохранен",
+      description: "Прайс-лист сохранен в формате Excel",
     });
   };
 
@@ -148,9 +152,9 @@ export function KaspiPriceListDialog({ isOpen, onClose, marketplaceId }: KaspiPr
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>Прайс-лист товаров Kaspi</DialogTitle>
-            <Button onClick={handleExportToFile} disabled={loading || products.length === 0}>
+            <Button onClick={handleExportToExcel} disabled={loading || products.length === 0}>
               <Download className="w-4 h-4 mr-2" />
-              Сохранить прайс-лист
+              Сохранить прайс-лист (Excel)
             </Button>
           </div>
         </DialogHeader>
